@@ -11,7 +11,6 @@ class SlackService(object):
         Probably should be a Singleton, but whatevs.
     """
     def __init__(self):
-        print(os.environ.get('KARMA_BOT_TOKEN'))
         self._client = SlackClient(os.environ.get('KARMA_BOT_TOKEN'))
 
     def connect(self):
@@ -28,7 +27,7 @@ class SlackService(object):
         events = []
         rtm_output_list = self._client.rtm_read()
         for output in rtm_output_list:
-            if output[EventKey.TYPE] == EventType.MESSAGE:
+            if output[EventKey.TYPE.value] == EventType.MESSAGE.value:
                 events.append(ApiMessage(output))
         return events
 
@@ -57,6 +56,7 @@ class SlackService(object):
         channels = self.fetch_channels()
         all_messages = []
         for channel in channels:
+            print(channel.id)
             messages = self.fetch_channel_history(channel.id, count=1000)
             while messages: # while messages is non-empty
                 all_messages += messages
@@ -69,7 +69,7 @@ class SlackService(object):
         """
         channels = []
         response = self._api_call('channels.list')
-        if response['channels']:
+        if 'channels' in response:
             for channel in response['channels']:
                 channels.append(ApiChannel(channel))
         return channels
@@ -77,9 +77,11 @@ class SlackService(object):
     def fetch_channel_history(self, channel, count=100, latest=time()):
         messages = []
         response = self._api_call('channels.history', channel=channel, count=count, latest=latest)
-        if response['messages']:
+        if 'messages' in response:
             for message in response['messages']:
-                messages.append(ApiMessage(message))
+                if 'user' in message:
+                    messages.append(ApiMessage(message))
+        return messages
 
     @rate_limited(1) # restricts this function to call once per second, as per Slack's policy
     def _api_call(self, endpoint, **kwargs):

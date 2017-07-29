@@ -28,7 +28,7 @@ class KarmaBot(object):
 
     def process_events(self, events):
         for event in events:
-            if event.type == EventType.MESSAGE:
+            if event.type == EventType.MESSAGE.value:
                 if self.bot_mention in event.text:
                     self.handle_command(BotCommand(event))
 

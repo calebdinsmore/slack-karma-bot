@@ -1,5 +1,5 @@
 import sqlite3
-from models import DbMessage, DbUser
+from models import DbMessage, DbUser, ReactionNames
 
 class SqliteHelper(object):
     """
@@ -34,6 +34,16 @@ class SqliteHelper(object):
             users_as_rows.append(user.to_row())
         return self._execute_many_query(query, users_as_rows)
 
+    def add_messages(self, messages):
+        """
+            Adds messages to the database.
+        """
+        query = 'INSERT INTO Message VALUES (?, ?, ?, ?, ?)'
+        messages_as_rows = []
+        for db_message in messages:
+            messages_as_rows.append(db_message.to_row())
+        return self._execute_many_query(query, messages_as_rows)
+
     def _execute_query(self, query, args=None):
         """
             Protected method that executes a database query.
@@ -49,20 +59,3 @@ class SqliteHelper(object):
         with self.connection:
             self.cursor.executemany(query, args)
         return self.cursor.fetchall()
-
-
-if __name__ == '__main__':
-    from slack_service import SlackService
-    import time
-    slack_service = SlackService()
-    sqlite_helper = SqliteHelper('karma.db')
-
-    db_users = []
-    for api_user in slack_service.fetch_users():
-        db_user = DbUser()
-        db_user.id = api_user.id
-        db_user.karma = 0
-        db_user.last_updated = time.time()
-        db_user.name = api_user.name
-        db_users.append(db_user)
-    print(sqlite_helper.add_users(db_users))

@@ -13,24 +13,46 @@ class EventType(Enum):
     MESSAGE = 'message'
     ERROR = 'error'
 
+class ReactionNames(Enum):
+    UPVOTE = 'upvote'
+    DOWNVOTE = 'downvote'
+
 """
     API Models
 """
 class Event(object):
     def __init__(self, rtm_event):
-        self.type = rtm_event[EventKey.TYPE]
+        self.type = rtm_event[EventKey.TYPE.value]
 
 class ApiMessage(Event):
     def __init__(self, rtm_event):
         Event.__init__(self, rtm_event)
-        self.channel = rtm_event[EventKey.CHANNEL]
-        self.user = rtm_event[EventKey.USER]
-        self.text = rtm_event[EventKey.TEXT]
+        self.user = rtm_event[EventKey.USER.value]
+        self.text = rtm_event[EventKey.TEXT.value]
         self.text_split = self.text.split()
-        self.timestamp = rtm_event[EventKey.TIMESTAMP]
+        self.timestamp = rtm_event[EventKey.TIMESTAMP.value]
         self.reactions = []
-        if rtm_event['reactions']: # contains upvote/downvote information -- important!
-            self.reactions = rtm_event['reactions']
+        if EventKey.REACTIONS.value in rtm_event: # contains upvote/downvote information -- important!
+            for json_reaction in rtm_event[EventKey.REACTIONS.value]:
+                self.reactions.append(ApiReaction(json_reaction))
+
+    def get_reaction_count(self, name):
+        """
+            Gets the count associated with a given reaction for this message.
+            For the purposes of this bot, this will really only be used for
+            upvotes and downvotes.
+        """
+        if self.reactions:
+            for reaction in self.reactions:
+                print(reaction.name)
+                if reaction.name == name:
+                    return reaction.count
+        return 0
+
+class ApiReaction(object):
+    def __init__(self, reaction_object):
+        self.name = reaction_object['name']
+        self.count = reaction_object['count']
 
 class ApiUser(object):
     """
@@ -69,7 +91,6 @@ class DbUser(object):
 class DbMessage(object):
     def __init__(self, message_row=None):
         if message_row:
-            self.id = message_row[0]
             self.text = message_row[1]
             self.upvotes = message_row[2]
             self.downvotes = message_row[3]
@@ -80,5 +101,5 @@ class DbMessage(object):
         """
             Returns db row representation of itself.
         """
-        return (self.id, self.text, self.upvotes, self.downvotes,
+        return (self.text, self.upvotes, self.downvotes,
                 self.timestamp, self.user_id)
