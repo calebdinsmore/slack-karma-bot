@@ -48,6 +48,21 @@ class SlackService(object):
                 users.append(ApiUser(user))
         return users
 
+    def get_new_messages(self, oldest_timestamp):
+        """
+            Fetch messages sent after a given timestamp.
+        """
+        channels = self.fetch_channels()
+        new_messages = []
+        for channel in channels:
+            messages, has_more = self.fetch_channel_history(channel.id, count=1000, oldest=oldest_timestamp)
+            new_messages += messages
+            while has_more:
+                messages, has_more = self.fetch_channel_history(channel.id, count=1000, 
+                        latest=messages[-1].timestamp, oldest=oldest_timestamp)
+                new_messages += messages
+        return new_messages
+
     def fetch_all_messages(self):
         """
             This is a monster of a request. 
@@ -56,8 +71,7 @@ class SlackService(object):
         channels = self.fetch_channels()
         all_messages = []
         for channel in channels:
-            print(channel.id)
-            messages = self.fetch_channel_history(channel.id, count=1000)
+            messages = self.fetch_channel_history(channel.id, count=1000, latest=time())
             while messages: # while messages is non-empty
                 all_messages += messages
                 messages = self.fetch_channel_history(channel.id, count=1000, latest=messages[-1].timestamp)
@@ -74,14 +88,16 @@ class SlackService(object):
                 channels.append(ApiChannel(channel))
         return channels
 
-    def fetch_channel_history(self, channel, count=100, latest=time()):
+    def fetch_channel_history(self, channel, count=100, latest=time(), oldest=0):
         messages = []
-        response = self._api_call('channels.history', channel=channel, count=count, latest=latest)
+        response = self._api_call('channels.history', channel=channel, count=count, latest=latest, oldest=oldest)
+        if not response['ok']:
+            return messages
         if 'messages' in response:
             for message in response['messages']:
                 if 'user' in message:
                     messages.append(ApiMessage(message))
-        return messages
+        return messages, response['has_more']
 
     @rate_limited(1) # restricts this function to call once per second, as per Slack's policy
     def _api_call(self, endpoint, **kwargs):
