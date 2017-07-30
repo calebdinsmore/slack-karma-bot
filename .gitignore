@@ -1,7 +1,6 @@
 __pycache__/
 karmabot/
 
-print_bot_id.py
 *.db
 initialize-db.sql
 *.pyc
