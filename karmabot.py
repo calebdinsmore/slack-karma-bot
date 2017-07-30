@@ -68,7 +68,7 @@ class KarmaBot(object):
         response = 'According to my calculations, <@' + command.user + '>\'s karma is *%d* (%d upvotes, %d downvotes).' % \
                 (upvotes - downvotes, upvotes, downvotes)
         if upvotes + downvotes > 0:
-            response += ' Your messages are %f%% upvoted.' % (upvotes / (upvotes + downvotes) * 100)
+            response += ' Your messages are %.2f%% upvoted.' % (upvotes / (upvotes + downvotes) * 100)
         return response
 
     def _update_messages(self):
@@ -99,10 +99,13 @@ if __name__ == '__main__':
     slack_service = SlackService()
     karma_bot = KarmaBot(slack_service, SqliteHelper('karma.db'), BOT_ID, AT_BOT)
     READ_WEBSOCKET_DELAY = 1 # one second read delay
-    if slack_service.connect():
-        print("Karma Bot up and running!")
-        while True:
-            events = slack_service.read_stream()
-            if events:
-                karma_bot.process_events(events)
-            time.sleep(READ_WEBSOCKET_DELAY)
+    try:
+        if slack_service.connect():
+            print("Karma Bot up and running!")
+            while True:
+                events = slack_service.read_stream()
+                if events:
+                    karma_bot.process_events(events)
+                time.sleep(READ_WEBSOCKET_DELAY)
+    except Exception:
+        slack_service.post_message('Something went wrong! Please restart me, <@U0T66D1D5>.', 'C6F9UP2NB')
