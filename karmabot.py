@@ -13,6 +13,7 @@ class Commands(Enum):
     SHOW = 'show'
     GIVE = 'give'
     INTRO = 'introduce'
+    HELP = 'help'
 
 class BotCommand(object):
     def __init__(self, message, bot_mention=None):
@@ -42,9 +43,11 @@ class KarmaBot(object):
             are valid commands. If so, then acts on the commands. If not,
             returns back what it needs for clarification.
         """
-        response = self._help_message()
+        response =  "I'm sorry; I don't quite understand. " + self._help_message()
         if Commands.SHOW.value in command.text_split:
             response = self._show_command(command)
+        elif Commands.HELP.value in command.text_split:
+            response = self._help_message()
         elif Commands.INTRO.value in command.text_split:
             response = self._introduction_message()
         self.api.post_message(response, channel=command.channel)
@@ -82,17 +85,17 @@ class KarmaBot(object):
         self.sql_helper.add_messages(db_messages_to_add)
 
     def _help_message(self):
-        help_string = "I'm sorry; I don't think I understand. Try asking me these things:\n"
+        help_string = "Try asking me these things:\n"
         help_string += "`@edukarma show me my karma`\n"
-        help_string += "`@edukarma help me (shows this message)`\n"
-        help_string += "[More commands to come]"
+        help_string += "`@edukarma help (shows this message)`\n"
+        help_string += "If you want to talk to me privately, send me a direct message!"
         return help_string
 
     def _introduction_message(self):
         intro_string = "*Hello!* I'm EduKarma, your friendly Slack karma calculator.\n"
-        intro_string += "I'm currently in Alpha, because my creator *@cjdinsmore* made me in a week.\n"
         intro_string += "I'll _probably_ do/say more things in the future, but for now, try asking this:\n"
-        intro_string += "`@edukarma show me my karma`"
+        intro_string += "`@edukarma show me my karma`\n"
+        intro_string += "If you want to check your karma privately, send me a direct message!"
         return intro_string
 
 if __name__ == '__main__':
