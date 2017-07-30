@@ -1,7 +1,7 @@
 import os
 from slackclient import SlackClient
 
-BOT_NAME = "karma-bot"
+BOT_NAME = "edukarma"
 
 slackclient = SlackClient(os.environ.get('KARMA_BOT_TOKEN'))
 
