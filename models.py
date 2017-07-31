@@ -27,11 +27,11 @@ class Event(object):
 class ApiMessage(Event):
     def __init__(self, rtm_event):
         Event.__init__(self, rtm_event)
-        self.user = rtm_event[EventKey.USER.value]
+        self.user = rtm_event[EventKey.USER.value] if EventKey.USER.value in rtm_event else None
         self.channel = rtm_event[EventKey.CHANNEL.value] if EventKey.CHANNEL.value in rtm_event else None
-        self.text = rtm_event[EventKey.TEXT.value]
-        self.text_split = self.text.split()
-        self.timestamp = rtm_event[EventKey.TIMESTAMP.value]
+        self.text = rtm_event[EventKey.TEXT.value] if EventKey.TEXT.value in rtm_event else None
+        self.text_split = self.text.split() if self.text else None
+        self.timestamp = rtm_event[EventKey.TIMESTAMP.value] if EventKey.TIMESTAMP.value in rtm_event else None
         self.reactions = []
         if EventKey.REACTIONS.value in rtm_event: # contains upvote/downvote information -- important!
             for json_reaction in rtm_event[EventKey.REACTIONS.value]:

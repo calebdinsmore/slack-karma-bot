@@ -5,6 +5,7 @@ from models import EventType, DbMessage
 from enum import Enum
 import os
 import time
+import traceback
 
 BOT_ID = os.environ.get('KARMA_BOT_ID')
 AT_BOT = "<@" + BOT_ID + ">"
@@ -36,7 +37,7 @@ class KarmaBot(object):
     def process_events(self, events):
         for event in events:
             if event.type == EventType.MESSAGE.value:
-                if self.bot_mention in event.text:
+                if event.text and self.bot_mention in event.text:
                     self.handle_command(BotCommand(event))
 
     def handle_command(self, command):
@@ -46,6 +47,7 @@ class KarmaBot(object):
             returns back what it needs for clarification.
         """
         response =  "I'm sorry; I don't quite understand. " + self._help_message()
+        print(command.user, command.text)
         if Commands.SHOW.value in command.text_split:
             response = self._show_command(command)
         elif Commands.HELP.value in command.text_split:
@@ -53,6 +55,9 @@ class KarmaBot(object):
         elif Commands.INTRO.value in command.text_split:
             response = self._introduction_message()
         elif Commands.UPDATE.value in command.text_split:
+            if command.user != 'U0T66D1D5':
+                response = "I'm sorry; only my creator can tell me to do that."
+                return
             if Commands.FORCE.value not in command.text_split:
                 response = "Do you want me to update my database of Slack messages? This can " + \
                         "take a little while to do, but if you're sure, tell me " + \
@@ -126,4 +131,5 @@ if __name__ == '__main__':
                     karma_bot.process_events(events)
                 time.sleep(READ_WEBSOCKET_DELAY)
     except Exception:
-        slack_service.post_message('Something went wrong! Please restart me, <@U0T66D1D5>.', 'C6F9UP2NB')
+        slack_service.post_message('Something went wrong! Please restart me, <@U0T66D1D5>.\n' + \
+        traceback.format_exc(), 'C6F9UP2NB')
