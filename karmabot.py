@@ -14,6 +14,8 @@ class Commands(Enum):
     GIVE = 'give'
     INTRO = 'introduce'
     HELP = 'help'
+    UPDATE = 'update'
+    FORCE = 'force'
 
 class BotCommand(object):
     def __init__(self, message, bot_mention=None):
@@ -50,6 +52,16 @@ class KarmaBot(object):
             response = self._help_message()
         elif Commands.INTRO.value in command.text_split:
             response = self._introduction_message()
+        elif Commands.UPDATE.value in command.text_split:
+            if Commands.FORCE.value not in command.text_split:
+                response = "Do you want me to update my database of Slack messages? This can " + \
+                        "take a little while to do, but if you're sure, tell me " + \
+                         "`@edukarma force update`."
+            else:
+                self.api.post_message('Excuse me for a moment while I update my database of Slack messages.', 
+                        channel=command.channel)
+                self._update_messages(notify_completion=True, channel=command.channel)
+                return
         self.api.post_message(response, channel=command.channel)
 
     def _show_command(self, command):
@@ -74,7 +86,7 @@ class KarmaBot(object):
             response += ' Your messages are %.2f%% upvoted.' % (upvotes / (upvotes + downvotes) * 100)
         return response
 
-    def _update_messages(self):
+    def _update_messages(self, notify_completion=False, channel=None):
         db_messages_to_add = []
         most_recent_timestamp = self.sql_helper.get_latest_message_timestamp()
         new_messages = self.api.get_new_messages(most_recent_timestamp)
@@ -83,6 +95,8 @@ class KarmaBot(object):
             db_message.init_from_api_message(api_message)
             db_messages_to_add.append(db_message)
         self.sql_helper.add_messages(db_messages_to_add)
+        if notify_completion:
+            self.api.post_message('Done updating!', channel)
 
     def _help_message(self):
         help_string = "Try asking me these things:\n"
