@@ -102,6 +102,7 @@ class KarmaBot(object):
         help_string = "Try asking me these things:\n"
         help_string += "`@edukarma show me my karma`\n"
         help_string += "`@edukarma help (shows this message)`\n"
+        help_string += "`@edukarma update`\n"
         help_string += "If you want to talk to me privately, send me a direct message!"
         return help_string
 
