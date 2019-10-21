@@ -12,6 +12,6 @@ ratelimit==1.3.0
 requests==2.18.2
 six==1.10.0
 slackclient==1.0.6
-urllib3==1.22
+urllib3==1.24.2
 websocket-client==0.44.0
 wrapt==1.10.10
